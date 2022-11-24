@@ -44,7 +44,8 @@ def get_grid_param_list():
             "first_n": [None],
             "clip_val_before_car": [6],
             "clip_val_after_car": [4],
-            "train_on_valid": [False,True],
+            "train_on_valid": [False,],#True
+            "low_cut_hz": [0.1,0.15,0.2],
         }
     )
 
@@ -126,6 +127,7 @@ def run(
     n_restart_epochs,
     merge_restart_models,
     n_start_filters,
+    low_cut_hz,
 ):
     if debug:
         n_epochs = 3

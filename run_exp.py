@@ -68,6 +68,7 @@ from decode_tueg import Add
 from braindecode.training.scoring import trial_preds_from_window_preds
 from braindecode.util import set_random_seeds
 from torch.optim.swa_utils import AveragedModel, SWALR
+from decode_tueg import HighPassFFT
 
 
 def run_exp(
@@ -92,7 +93,8 @@ def run_exp(
         output_dir,
         n_restart_epochs,
         merge_restart_models,
-        n_start_filters,):   
+        n_start_filters,
+        low_cut_hz):   
     trange = range
     tqdm = lambda x: x
     set_random_seeds(np_th_seed, cuda=True)
@@ -154,15 +156,21 @@ def run_exp(
         n_start_filters=n_start_filters,
     )
 
-    model = nn.Sequential(
+    preproc_modules = [
         RobustStandardizeBatch(1e-10),
         ClipBatch(-clip_val_before_car, clip_val_before_car),
         CommonAverageReference(), 
-        ClipBatch(-clip_val_after_car, clip_val_after_car),
+        ClipBatch(-clip_val_after_car, clip_val_after_car),]
+
+    if low_cut_hz is not None:
+        preproc_modules = [HighPassFFT(low_cut_hz=low_cut_hz)] + preproc_modules
+
+    model = nn.Sequential(
+        *preproc_modules,
         model,);
     model = model.cuda();
-    
-    deep_model = model[4].deep
+
+    deep_model = model[-1].deep
 
     for m in deep_model:
         if m.__class__.__name__ == 'Dropout':
@@ -191,19 +199,18 @@ def run_exp(
     for wanted_module in wanted_modules:
         cur_X = wanted_module(cur_X)
 
-    model[4].deep = nn.Sequential(*wanted_modules)
+    model[-1].deep = nn.Sequential(*wanted_modules)
 
 
     if final_nonlin == 'sigmoid':
-        model[4].sigmoid = nn.Sigmoid()
+        model[-1].sigmoid = nn.Sigmoid()
     elif final_nonlin == 'soft_clamp_0_1':
-        model[4].sigmoid = nn.Sequential(
+        model[-1].sigmoid = nn.Sequential(
             Add(),
             Expression(soft_clamp_to_0_1))
     else:
         assert final_nonlin is None
-        model[4].sigmoid = Add()
-    preproc = model[:4]
+        model[-1].sigmoid = Add()
 
     opt_model = th.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     opt_for_scheduler = opt_model
