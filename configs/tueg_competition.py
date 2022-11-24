@@ -45,8 +45,8 @@ def get_grid_param_list():
             "clip_val_before_car": [6],
             "clip_val_after_car": [4],
             "train_on_valid": [False,],#True
-            "low_cut_hz": [0.3,0.5,1],
-            "common_average_rereference": [False],#True
+            "low_cut_hz": [1],
+            "common_average_rereference": [False,],#True
         }
     )
 
