@@ -95,7 +95,8 @@ def run_exp(
         merge_restart_models,
         n_start_filters,
         low_cut_hz,
-        common_average_rereference):   
+        common_average_rereference,
+        save_valid_preds):   
     trange = range
     tqdm = lambda x: x
     set_random_seeds(np_th_seed, cuda=True)
@@ -362,6 +363,8 @@ def run_exp(
          mean_trial_preds[tuabn_valid.description.condition == 'EO']) / 2
         valid_loss_trial = np.abs(trial_ys[tuabn_valid.description.condition == 'EC'] - mean_pred_across_cond).mean()
         valid_loss_trial_orig = (target_scaler.mult_element - target_scaler.add_element) * (valid_loss_trial)
+        if save_valid_preds:
+            np.save(os.path.join(output_dir, './valid_mean_pred.npy'), mean_pred_across_cond)
     
     
     tuabn_eval = pickle.load(open(os.path.join(data_path,'tuabn_eval.pkl'), 'rb'))

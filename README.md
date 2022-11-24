@@ -9,6 +9,7 @@ We train a deep4 network from [braindecode](www.braindecode.org), with double th
 As for preprocessing,:
 1. resample the data to 100 Hz
 2. remove Cz sensor
+3. FFT-based highpass above 0.5 Hz
 3. robustly (median-based) standardize each channel in each input window
 4. clip values
 5. common average rereference the data

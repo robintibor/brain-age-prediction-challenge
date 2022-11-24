@@ -44,9 +44,9 @@ def get_grid_param_list():
             "first_n": [None],
             "clip_val_before_car": [6],
             "clip_val_after_car": [4],
-            "train_on_valid": [False,],#True
-            "low_cut_hz": [1],
-            "common_average_rereference": [False,],#True
+            "train_on_valid": [False,True],#True
+            "low_cut_hz": [0.5],
+            "common_average_rereference": [True,],#True
         }
     )
 
@@ -66,6 +66,7 @@ def get_grid_param_list():
             "n_restart_epochs": [None],
             "merge_restart_models": [False,],
             "n_start_filters": [50],
+            "save_valid_preds": [True],
         }
     )
 
@@ -130,6 +131,7 @@ def run(
     n_start_filters,
     low_cut_hz,
     common_average_rereference,
+    save_valid_preds,
 ):
     if debug:
         n_epochs = 3
