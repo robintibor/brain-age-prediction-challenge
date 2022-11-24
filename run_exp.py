@@ -94,7 +94,8 @@ def run_exp(
         n_restart_epochs,
         merge_restart_models,
         n_start_filters,
-        low_cut_hz):   
+        low_cut_hz,
+        common_average_rereference):   
     trange = range
     tqdm = lambda x: x
     set_random_seeds(np_th_seed, cuda=True)
@@ -156,14 +157,18 @@ def run_exp(
         n_start_filters=n_start_filters,
     )
 
-    preproc_modules = [
-        RobustStandardizeBatch(1e-10),
-        ClipBatch(-clip_val_before_car, clip_val_before_car),
-        CommonAverageReference(), 
-        ClipBatch(-clip_val_after_car, clip_val_after_car),]
-
+    preproc_modules = []
     if low_cut_hz is not None:
-        preproc_modules = [HighPassFFT(low_cut_hz=low_cut_hz)] + preproc_modules
+        preproc_modules.append(HighPassFFT(low_cut_hz=low_cut_hz))
+        
+    preproc_modules.append(RobustStandardizeBatch(1e-10))
+    preproc_modules.append(ClipBatch(-clip_val_before_car, clip_val_before_car))
+    
+    if common_average_rereference:
+        preproc_modules.append(CommonAverageReference())
+    
+    preproc_modules.append(ClipBatch(-clip_val_after_car, clip_val_after_car))
+
 
     model = nn.Sequential(
         *preproc_modules,
